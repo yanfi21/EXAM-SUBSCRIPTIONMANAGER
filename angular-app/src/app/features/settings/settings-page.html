@@ -1,0 +1,173 @@
+<div class="flex flex-col gap-4">
+  <section class="card p-4">
+    <h2 class="section-title mb-3">Оформление и представление</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="field">
+        <span class="label">Тема оформления</span>
+        <div class="flex gap-2">
+          @for (mode of themes; track mode) {
+            <button
+              type="button"
+              class="chip cursor-pointer"
+              [class.chip-active]="preferences.theme() === mode"
+              (click)="preferences.setTheme(mode)"
+            >
+              <app-icon [name]="mode === 'dark' ? 'moon' : 'sun'" [size]="13" />
+              {{ themeLabels[mode] }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Представление по умолчанию</span>
+        <div class="flex flex-wrap gap-2">
+          @for (mode of views; track mode) {
+            <button
+              type="button"
+              class="chip cursor-pointer"
+              [class.chip-active]="preferences.view() === mode"
+              (click)="preferences.setView(mode)"
+            >
+              {{ viewLabels[mode] }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card p-4">
+    <h2 class="section-title mb-1">Экспорт и импорт данных</h2>
+    <p class="muted mb-3">
+      Все данные хранятся в localStorage браузера ({{ usedKb() }} КБ). Сейчас сохранено задач:
+      {{ activeTasks() }}, заметок: {{ activeNotes() }}, отзывов: {{ feedback.count() }}.
+    </p>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" class="btn btn-primary" (click)="export()">
+        <app-icon name="download" [size]="15" />
+        Выгрузить JSON
+      </button>
+      <label class="btn btn-soft">
+        <app-icon name="upload" [size]="15" />
+        Загрузить из файла
+        <input type="file" accept="application/json" class="hidden" (change)="import($event)" />
+      </label>
+      <div class="flex gap-1.5">
+        <button
+          type="button"
+          class="chip cursor-pointer"
+          [class.chip-active]="importMode() === 'merge'"
+          (click)="importMode.set('merge')"
+        >
+          Объединить
+        </button>
+        <button
+          type="button"
+          class="chip cursor-pointer"
+          [class.chip-active]="importMode() === 'replace'"
+          (click)="importMode.set('replace')"
+        >
+          Заменить
+        </button>
+      </div>
+    </div>
+    @if (importError()) {
+      <p class="mt-2 text-sm text-danger">{{ importError() }}</p>
+    }
+  </section>
+
+  <section class="card p-4">
+    <h2 class="section-title mb-1">Обратная связь</h2>
+    <p class="muted mb-3">
+      Отзыв сохраняется локально. Можно также отправить его на почту поддержки:
+      <a class="text-brand underline" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+    </p>
+
+    <form class="grid gap-3 sm:grid-cols-2" [formGroup]="form" (ngSubmit)="submitFeedback()">
+      <div class="field">
+        <label class="label" for="fb-name">Имя</label>
+        <input id="fb-name" class="input" formControlName="name" placeholder="Как к вам обращаться" />
+      </div>
+
+      <div class="field">
+        <label class="label" for="fb-email">Email</label>
+        <input
+          id="fb-email"
+          type="email"
+          class="input"
+          formControlName="email"
+          placeholder="mail@example.com"
+        />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span class="text-xs text-danger">Некорректный email</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="fb-rating">Оценка</label>
+        <select id="fb-rating" class="select" formControlName="rating">
+          @for (rating of ratings; track rating) {
+            <option [value]="rating">{{ stars(rating) }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field sm:col-span-2">
+        <label class="label" for="fb-message">Сообщение</label>
+        <textarea
+          id="fb-message"
+          class="textarea"
+          formControlName="message"
+          placeholder="Что улучшить в приложении?"
+        ></textarea>
+        @if (form.controls.message.invalid && form.controls.message.touched) {
+          <span class="text-xs text-danger">Напишите сообщение (минимум 10 символов)</span>
+        }
+      </div>
+
+      <div class="flex flex-wrap gap-2 sm:col-span-2">
+        <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+        <a class="btn btn-soft" [href]="mailtoLink">
+          <app-icon name="mail" [size]="15" />
+          Написать письмом
+        </a>
+      </div>
+    </form>
+
+    @if (feedback.entries().length) {
+      <ul class="mt-4 flex flex-col gap-2">
+        @for (entry of feedback.entries().slice(0, 5); track entry.id) {
+          <li class="rounded-xl border border-border px-3 py-2">
+            <p class="text-sm font-semibold text-ink">{{ entry.name }} · {{ stars(entry.rating) }}</p>
+            <p class="muted text-sm">{{ entry.message }}</p>
+            <p class="muted text-[11px]">{{ createdAt(entry) }}</p>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section class="card p-4">
+    <h2 class="section-title mb-1">Управление данными</h2>
+    <p class="muted mb-3">
+      Демонстрационный набор поможет быстро оценить возможности приложения.
+    </p>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="btn btn-soft" (click)="loadDemo()">Загрузить демо-данные</button>
+      <button type="button" class="btn btn-danger" (click)="resetOpen.set(true)">
+        Удалить все данные
+      </button>
+    </div>
+  </section>
+</div>
+
+@if (resetOpen()) {
+  <app-confirm-dialog
+    title="Удалить все данные?"
+    message="Задачи, заметки, отзывы и настройки будут удалены из localStorage без возможности восстановления."
+    confirmLabel="Удалить всё"
+    (confirmed)="resetAll()"
+    (cancelled)="resetOpen.set(false)"
+  />
+}

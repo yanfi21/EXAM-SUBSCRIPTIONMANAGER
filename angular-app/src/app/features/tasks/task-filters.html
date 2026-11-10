@@ -1,0 +1,106 @@
+<section class="card p-4">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="field sm:col-span-2 lg:col-span-1">
+      <label class="label" for="filter-search">Поиск</label>
+      <div class="relative">
+        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">
+          <app-icon name="search" [size]="15" />
+        </span>
+        <input
+          id="filter-search"
+          data-search-input
+          type="search"
+          class="input pl-9"
+          placeholder="Название, описание, тег"
+          [value]="preferences.filters().search"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label" for="filter-status">Статус</label>
+      <select
+        id="filter-status"
+        class="select"
+        [value]="preferences.filters().status"
+        (change)="onStatus($any($event.target).value)"
+      >
+        <option value="all">Все статусы</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabels[status] }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="label" for="filter-priority">Приоритет</label>
+      <select
+        id="filter-priority"
+        class="select"
+        [value]="preferences.filters().priority"
+        (change)="onPriority($any($event.target).value)"
+      >
+        <option value="all">Любой приоритет</option>
+        @for (priority of priorities; track priority) {
+          <option [value]="priority">{{ priorityLabels[priority] }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="label" for="filter-sort">Сортировка</label>
+      <div class="flex gap-2">
+        <select
+          id="filter-sort"
+          class="select"
+          [value]="preferences.filters().sortBy"
+          (change)="onSortField($any($event.target).value)"
+        >
+          @for (field of sortFields; track field) {
+            <option [value]="field">{{ sortLabels[field] }}</option>
+          }
+        </select>
+        <button
+          type="button"
+          class="btn btn-soft"
+          [title]="preferences.filters().sortDir === 'asc' ? 'По возрастанию' : 'По убыванию'"
+          (click)="toggleDirection()"
+        >
+          {{ preferences.filters().sortDir === 'asc' ? '↑' : '↓' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <button
+      type="button"
+      class="chip cursor-pointer"
+      [class.chip-active]="preferences.filters().onlyOverdue"
+      (click)="toggleOverdue()"
+    >
+      <app-icon name="alert" [size]="13" />
+      Только просроченные
+    </button>
+
+    @for (tag of availableTags(); track tag) {
+      <button
+        type="button"
+        class="chip cursor-pointer"
+        [class.chip-active]="preferences.filters().tags.includes(tag)"
+        (click)="preferences.toggleTag(tag)"
+      >
+        #{{ tag }}
+      </button>
+    }
+
+    <span class="muted ml-auto text-xs">Найдено: {{ resultCount().length }}</span>
+
+    @if (preferences.filtersDirty()) {
+      <button type="button" class="btn btn-ghost btn-sm" (click)="preferences.resetFilters()">
+        Сбросить
+      </button>
+    }
+  </div>
+</section>

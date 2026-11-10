@@ -339,14 +339,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 }));
 
-let persistenceReady = false;
-
 export function startPersistence(): () => void {
-  if (persistenceReady) {
-    return () => undefined;
-  }
-  persistenceReady = true;
+  const initial = useAppStore.getState();
   writeValue(STORAGE_KEYS.schemaVersion, SCHEMA_VERSION);
+  writeValue(STORAGE_KEYS.tasks, initial.tasks);
+  writeValue(STORAGE_KEYS.notes, initial.notes);
+  writeValue(STORAGE_KEYS.feedback, initial.feedback);
+  writeValue(STORAGE_KEYS.preferences, initial.preferences);
+
   return useAppStore.subscribe((state, previous) => {
     if (state.tasks !== previous.tasks) {
       writeValue(STORAGE_KEYS.tasks, state.tasks);

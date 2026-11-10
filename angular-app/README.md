@@ -1,59 +1,53 @@
-# AngularApp
+# Менеджер задач и заметок — вариант A (Angular)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.42.
+Реализация ТЗ «Менеджер личных задач и заметок» на Angular 20 со standalone-компонентами и Signals.
 
-## Development server
+## Стек
 
-To start a local development server, run:
+- Angular 20 (standalone, Signals, новый синтаксис управления потоком `@if` / `@for`)
+- Angular Router с ленивой загрузкой представлений
+- Reactive Forms для форм задачи, заметки и обратной связи
+- Angular CDK Drag & Drop для канбан-доски
+- SCSS (дизайн-токены, стили Markdown и drag & drop) + Tailwind CSS 4 через PostCSS
+- Vitest + jsdom (`@angular/build:unit-test`) для модульных тестов
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Команды
 
 ```bash
-ng generate component component-name
+npm install     # установка зависимостей
+npm start       # дев-сервер http://localhost:4200
+npm run build   # production-сборка в dist/angular-app
+npm test        # модульные тесты (Vitest, 43 теста)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Структура
 
-```bash
-ng generate --help
+```
+src/app/
+├── app.ts, app.html          каркас приложения: меню, шапка, футер, горячие клавиши
+├── app.config.ts             провайдеры приложения
+├── app.routes.ts             маршруты и ленивая загрузка
+├── core/
+│   ├── models/               доменные типы и константы
+│   ├── services/             StorageService, TaskService, NoteService, PreferencesService,
+│   │                         FeedbackService, BackupService, QuoteService, ToastService,
+│   │                         TaskDialogService
+│   └── utils/                date, filter, stats, backup, markdown, demo, id
+├── features/
+│   ├── tasks/                оболочка, список, доска, календарь, карточка, фильтры, диалог
+│   ├── notes/                список заметок и диалог редактирования
+│   ├── stats/                статистика
+│   ├── trash/                корзина
+│   ├── settings/             настройки, экспорт/импорт, обратная связь
+│   └── not-found/            страница 404
+└── shared/components/        icon, modal, confirm-dialog, empty-state, toast-host, badges
 ```
 
-## Building
+## Особенности реализации
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Состояние приложения — сигналы в сервисах; производные данные (`visibleTasks`, `columns`,
+  `stats`, `availableTags`, `taskOfTheDay`) вычисляются через `computed`.
+- Сохранение в `localStorage` выполняется в `effect` при каждом изменении состояния.
+- `StorageService` переключается на хранилище в памяти, если `localStorage` недоступен,
+  и безопасно обрабатывает повреждённый JSON.
+- При первом запуске загружается демонстрационный набор задач и заметок.

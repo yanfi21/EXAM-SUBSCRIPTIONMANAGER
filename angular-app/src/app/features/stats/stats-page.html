@@ -1,0 +1,152 @@
+<div class="flex flex-col gap-4">
+  <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <article class="card flex items-center gap-3 p-4">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
+        <app-icon name="list" [size]="18" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-xl font-bold text-ink">{{ stats().total }}</p>
+        <p class="muted truncate text-xs">Всего задач</p>
+        <p class="muted truncate text-[11px]">Заметок: {{ notesCount() }}</p>
+      </div>
+    </article>
+
+    <article class="card flex items-center gap-3 p-4">
+      <span
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-success-soft text-success"
+      >
+        <app-icon name="check" [size]="18" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-xl font-bold text-ink">{{ stats().done }}</p>
+        <p class="muted truncate text-xs">Выполнено</p>
+        <p class="muted truncate text-[11px]">{{ stats().completionRate }}% от всех задач</p>
+      </div>
+    </article>
+
+    <article class="card flex items-center gap-3 p-4">
+      <span
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-danger-soft text-danger"
+      >
+        <app-icon name="alert" [size]="18" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-xl font-bold text-ink">{{ stats().overdue }}</p>
+        <p class="muted truncate text-xs">Просрочено</p>
+        <p class="muted truncate text-[11px]">Сегодня к сдаче: {{ stats().dueToday }}</p>
+      </div>
+    </article>
+
+    <article class="card flex items-center gap-3 p-4">
+      <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-warn-soft text-warn">
+        <app-icon name="clock" [size]="18" />
+      </span>
+      <div class="min-w-0">
+        <p class="text-xl font-bold text-ink">{{ stats().inProgress }}</p>
+        <p class="muted truncate text-xs">В работе</p>
+        <p class="muted truncate text-[11px]">К выполнению: {{ stats().todo }}</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="grid gap-3 lg:grid-cols-2">
+    <article class="card p-4">
+      <h3 class="section-title mb-3">Выполнено за период</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="rounded-xl border border-border p-3">
+          <p class="text-2xl font-bold text-ink">{{ stats().completedThisWeek }}</p>
+          <p class="muted text-xs">за последние 7 дней</p>
+        </div>
+        <div class="rounded-xl border border-border p-3">
+          <p class="text-2xl font-bold text-ink">{{ stats().completedThisMonth }}</p>
+          <p class="muted text-xs">за последние 30 дней</p>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <p class="label mb-2">Текущая неделя</p>
+        <div class="flex h-36 items-end justify-between gap-2">
+          @for (day of stats().weekly; track day.date) {
+            <div class="flex flex-1 flex-col items-center gap-1">
+              <div class="flex h-28 w-full items-end justify-center gap-1">
+                <span
+                  class="w-2.5 rounded-t bg-brand/40"
+                  [style.height.%]="barHeight(day.created)"
+                  [title]="'Создано: ' + day.created"
+                ></span>
+                <span
+                  class="w-2.5 rounded-t bg-success"
+                  [style.height.%]="barHeight(day.completed)"
+                  [title]="'Выполнено: ' + day.completed"
+                ></span>
+              </div>
+              <span class="muted text-[11px]">{{ day.label }}</span>
+            </div>
+          }
+        </div>
+        <div class="muted mt-2 flex items-center gap-4 text-xs">
+          <span class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded bg-brand/40"></span> создано
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded bg-success"></span> выполнено
+          </span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card p-4">
+      <h3 class="section-title mb-3">Распределение</h3>
+      <p class="label mb-2">По приоритету</p>
+      <div class="flex flex-col gap-2">
+        @for (priority of priorities; track priority) {
+          <div class="flex items-center gap-3">
+            <span class="muted w-20 text-xs">{{ priorityLabels[priority] }}</span>
+            <span class="h-2 flex-1 overflow-hidden rounded-full bg-subtle">
+              <span
+                class="block h-full rounded-full bg-brand"
+                [style.width.%]="priorityPercent(priority)"
+              ></span>
+            </span>
+            <span class="w-10 text-right text-xs font-semibold text-ink">
+              {{ stats().byPriority[priority] }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <p class="label mt-4 mb-2">Популярные теги</p>
+      @if (stats().topTags.length) {
+        <div class="flex flex-wrap gap-1.5">
+          @for (item of stats().topTags; track item.tag) {
+            <span class="chip">#{{ item.tag }} · {{ item.count }}</span>
+          }
+        </div>
+      } @else {
+        <p class="muted text-sm">Теги ещё не использовались.</p>
+      }
+    </article>
+  </section>
+
+  <section class="card p-4">
+    <h3 class="section-title mb-3">Просроченные задачи</h3>
+    @if (overdueTasks().length) {
+      <ul class="flex flex-col gap-2">
+        @for (task of overdueTasks(); track task.id) {
+          <li>
+            <button
+              type="button"
+              class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-border px-3 py-2 text-left transition hover:border-danger"
+              (click)="dialog.openEdit(task)"
+            >
+              <span class="truncate text-sm font-medium text-ink">{{ task.title }}</span>
+              <span class="badge bg-danger-soft text-danger">{{ deadline(task) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted text-sm">Просроченных задач нет — отличная работа!</p>
+    }
+  </section>
+</div>

@@ -1,0 +1,69 @@
+<div class="flex flex-col gap-4">
+  <section class="card flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="field flex-1">
+      <label class="label" for="note-search">Поиск по заметкам</label>
+      <div class="relative">
+        <span class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">
+          <app-icon name="search" [size]="15" />
+        </span>
+        <input
+          id="note-search"
+          data-search-input
+          type="search"
+          class="input pl-9"
+          placeholder="Заголовок или текст заметки"
+          [value]="notes.search()"
+          (input)="notes.setSearch($any($event.target).value)"
+        />
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <app-icon name="plus" [size]="15" />
+      Новая заметка
+    </button>
+  </section>
+
+  @if (notes.visibleNotes().length) {
+    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      @for (note of notes.visibleNotes(); track note.id) {
+        <article class="card flex flex-col gap-2 p-4 transition hover:shadow-md">
+          <header class="flex items-start justify-between gap-2">
+            <h3 class="text-sm font-bold break-words text-ink">{{ note.title }}</h3>
+            <div class="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                aria-label="Редактировать заметку"
+                (click)="openEdit(note)"
+              >
+                <app-icon name="edit" [size]="14" />
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm text-danger"
+                aria-label="Удалить заметку"
+                (click)="remove(note)"
+              >
+                <app-icon name="trash" [size]="14" />
+              </button>
+            </div>
+          </header>
+          <div class="markdown max-h-48 overflow-hidden" [innerHTML]="preview(note)"></div>
+          <footer class="muted mt-auto text-xs">Обновлено {{ updatedAt(note) }}</footer>
+        </article>
+      }
+    </section>
+  } @else {
+    <app-empty-state
+      icon="note"
+      title="Заметок пока нет"
+      description="Создайте первую заметку: поддерживаются заголовки, списки, цитаты и выделение текста."
+    >
+      <button type="button" class="btn btn-primary" (click)="openCreate()">Создать заметку</button>
+    </app-empty-state>
+  }
+
+  @if (dialogOpen()) {
+    <app-note-dialog [note]="editing()" (saved)="save($event)" (cancelled)="close()" />
+  }
+</div>

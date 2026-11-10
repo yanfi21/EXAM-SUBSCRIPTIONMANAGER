@@ -1,0 +1,94 @@
+@if (total()) {
+  <div class="flex flex-col gap-4">
+    <section class="card flex flex-wrap items-center justify-between gap-3 p-4">
+      <div>
+        <h2 class="section-title">В корзине {{ total() }} элементов</h2>
+        <p class="muted">Элементы хранятся до полного удаления вручную.</p>
+      </div>
+      <button type="button" class="btn btn-danger" (click)="confirmOpen.set(true)">
+        <app-icon name="trash" [size]="15" />
+        Очистить корзину
+      </button>
+    </section>
+
+    @if (tasks.deletedTasks().length) {
+      <section class="card p-4">
+        <h3 class="section-title mb-3">Задачи ({{ tasks.deletedTasks().length }})</h3>
+        <ul class="flex flex-col gap-2">
+          @for (task of tasks.deletedTasks(); track task.id) {
+            <li
+              class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2"
+            >
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-ink">{{ task.title }}</p>
+                <p class="muted text-xs">Удалено {{ deletedAt(task) }}</p>
+              </div>
+              <div class="flex items-center gap-1">
+                <button type="button" class="btn btn-soft btn-sm" (click)="restoreTask(task)">
+                  <app-icon name="restore" [size]="14" />
+                  Восстановить
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm text-danger"
+                  aria-label="Удалить навсегда"
+                  (click)="purgeTask(task)"
+                >
+                  <app-icon name="close" [size]="14" />
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (notes.deletedNotes().length) {
+      <section class="card p-4">
+        <h3 class="section-title mb-3">Заметки ({{ notes.deletedNotes().length }})</h3>
+        <ul class="flex flex-col gap-2">
+          @for (note of notes.deletedNotes(); track note.id) {
+            <li
+              class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2"
+            >
+              <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-ink">{{ note.title }}</p>
+                <p class="muted truncate text-xs">{{ preview(note) }}</p>
+              </div>
+              <div class="flex items-center gap-1">
+                <button type="button" class="btn btn-soft btn-sm" (click)="restoreNote(note)">
+                  <app-icon name="restore" [size]="14" />
+                  Восстановить
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm text-danger"
+                  aria-label="Удалить навсегда"
+                  (click)="purgeNote(note)"
+                >
+                  <app-icon name="close" [size]="14" />
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+} @else {
+  <app-empty-state
+    icon="trash"
+    title="Корзина пуста"
+    description="Удалённые задачи и заметки попадают сюда, и их можно восстановить в один клик."
+  />
+}
+
+@if (confirmOpen()) {
+  <app-confirm-dialog
+    title="Очистить корзину?"
+    message="Все удалённые задачи и заметки будут стёрты безвозвратно."
+    confirmLabel="Очистить"
+    (confirmed)="emptyTrash()"
+    (cancelled)="confirmOpen.set(false)"
+  />
+}

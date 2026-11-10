@@ -1,0 +1,80 @@
+<div class="grid gap-4 lg:grid-cols-3" cdkDropListGroup>
+  @for (status of statuses; track status) {
+    <section class="flex min-w-0 flex-col gap-3">
+      <header class="flex items-center justify-between gap-2 px-1">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-bold text-ink">{{ statusLabels[status] }}</h3>
+          <span class="chip">{{ columns()[status].length }}</span>
+        </div>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          [attr.aria-label]="'Добавить задачу в «' + statusLabels[status] + '»'"
+          (click)="dialog.openCreate(status)"
+        >
+          <app-icon name="plus" [size]="15" />
+        </button>
+      </header>
+
+      <div
+        class="board-column scroll-thin flex min-h-[200px] flex-col gap-2.5 rounded-2xl border border-dashed border-border bg-subtle/50 p-2.5"
+        cdkDropList
+        [cdkDropListData]="columns()[status]"
+        (cdkDropListDropped)="drop($event, status)"
+      >
+        @for (task of columns()[status]; track task.id) {
+          <div class="card cursor-grab p-3 active:cursor-grabbing" cdkDrag [cdkDragData]="task">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-start justify-between gap-2">
+                <h4 class="text-sm font-semibold break-words text-ink">{{ task.title }}</h4>
+                <span class="text-muted"><app-icon name="drag" [size]="14" /></span>
+              </div>
+
+              @if (task.description) {
+                <p class="muted line-clamp-2">{{ task.description }}</p>
+              }
+
+              <div class="flex flex-wrap items-center gap-1.5">
+                <app-priority-badge [priority]="task.priority" />
+                @if (task.dueDate) {
+                  <app-due-badge [label]="deadline(task)" [overdue]="isOverdue(task)" />
+                }
+              </div>
+
+              @if (task.tags.length) {
+                <div class="flex flex-wrap gap-1">
+                  @for (tag of task.tags; track tag) {
+                    <span class="chip">#{{ tag }}</span>
+                  }
+                </div>
+              }
+
+              <div class="flex justify-end gap-1">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  aria-label="Редактировать"
+                  (click)="dialog.openEdit(task)"
+                >
+                  <app-icon name="edit" [size]="14" />
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm text-danger"
+                  aria-label="Удалить"
+                  (click)="remove(task)"
+                >
+                  <app-icon name="trash" [size]="14" />
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (!columns()[status].length) {
+          <p class="muted px-2 py-6 text-center text-xs">Перетащите задачу сюда</p>
+        }
+      </div>
+    </section>
+  }
+</div>
