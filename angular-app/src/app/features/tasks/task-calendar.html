@@ -1,0 +1,129 @@
+<div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+  <section class="card p-3 sm:p-4">
+    <header class="mb-3 flex items-center justify-between gap-2">
+      <h3 class="section-title">{{ monthTitle() }}</h3>
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          class="btn btn-soft btn-sm"
+          aria-label="Предыдущий месяц"
+          (click)="shiftMonth(-1)"
+        >
+          <app-icon name="chevronLeft" [size]="15" />
+        </button>
+        <button type="button" class="btn btn-soft btn-sm" (click)="goToday()">Сегодня</button>
+        <button
+          type="button"
+          class="btn btn-soft btn-sm"
+          aria-label="Следующий месяц"
+          (click)="shiftMonth(1)"
+        >
+          <app-icon name="chevronRight" [size]="15" />
+        </button>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-7 gap-1 text-center">
+      @for (weekday of weekdays; track weekday) {
+        <span class="label py-1">{{ weekday }}</span>
+      }
+    </div>
+
+    <div class="mt-1 grid grid-cols-7 gap-1">
+      @for (cell of cells(); track cell.key) {
+        <button
+          type="button"
+          class="flex min-h-[72px] cursor-pointer flex-col gap-1 rounded-xl border p-1.5 text-left transition sm:min-h-[92px]"
+          [class]="
+            selected() === cell.key
+              ? 'border-brand bg-brand-soft/60'
+              : 'border-border bg-surface hover:border-brand'
+          "
+          [class.opacity-45]="cell.outside"
+          (click)="selected.set(cell.key)"
+          (dblclick)="dialog.openCreate('todo', cell.key)"
+        >
+          <span class="text-xs font-semibold" [class]="cell.today ? 'text-brand' : 'text-muted'">
+            {{ cell.day }}
+          </span>
+          <span class="flex flex-col gap-0.5">
+            @for (task of cell.tasks.slice(0, 2); track task.id) {
+              <span
+                class="truncate rounded-md px-1 py-0.5 text-[10px] font-medium"
+                [class]="
+                  task.status === 'done'
+                    ? 'bg-success-soft text-success line-through'
+                    : isOverdue(task)
+                      ? 'bg-danger-soft text-danger'
+                      : 'bg-subtle text-ink'
+                "
+              >
+                {{ task.title }}
+              </span>
+            }
+            @if (cell.tasks.length > 2) {
+              <span class="text-[10px] text-muted">ещё {{ cell.tasks.length - 2 }}</span>
+            }
+          </span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <aside class="flex flex-col gap-4">
+    <section class="card p-4">
+      <header class="mb-3 flex items-center justify-between gap-2">
+        <h3 class="text-sm font-bold text-ink">{{ selectedTitle() }}</h3>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          (click)="dialog.openCreate('todo', selected())"
+        >
+          <app-icon name="plus" [size]="14" />
+          Задача
+        </button>
+      </header>
+
+      @if (selectedTasks().length) {
+        <ul class="flex flex-col gap-2">
+          @for (task of selectedTasks(); track task.id) {
+            <li>
+              <button
+                type="button"
+                class="w-full cursor-pointer rounded-xl border border-border p-2.5 text-left transition hover:border-brand"
+                (click)="dialog.openEdit(task)"
+              >
+                <span class="block text-sm font-semibold text-ink">{{ task.title }}</span>
+                <span class="mt-1.5 flex flex-wrap gap-1.5">
+                  <app-priority-badge [priority]="task.priority" />
+                  <app-status-badge [status]="task.status" />
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted text-sm">На этот день задач нет.</p>
+      }
+    </section>
+
+    @if (withoutDue().length) {
+      <section class="card p-4">
+        <h3 class="mb-2 text-sm font-bold text-ink">Без дедлайна ({{ withoutDue().length }})</h3>
+        <ul class="flex flex-col gap-1.5">
+          @for (task of withoutDue().slice(0, 6); track task.id) {
+            <li>
+              <button
+                type="button"
+                class="muted w-full cursor-pointer truncate text-left hover:text-brand"
+                (click)="dialog.openEdit(task)"
+              >
+                {{ task.title }}
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </aside>
+</div>

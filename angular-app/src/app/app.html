@@ -1,0 +1,93 @@
+<div class="flex min-h-screen flex-col lg:flex-row">
+  <aside
+    class="border-b border-border bg-surface p-4 lg:sticky lg:top-0 lg:block lg:h-screen lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0"
+    [class.hidden]="!menuOpen()"
+  >
+    <div class="mb-5 flex items-center gap-2.5">
+      <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white">
+        <app-icon name="check" [size]="18" />
+      </span>
+      <div>
+        <p class="text-sm font-bold text-ink">Задачи и заметки</p>
+        <p class="muted text-xs">Angular + Signals</p>
+      </div>
+    </div>
+
+    <nav class="flex flex-col gap-1">
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="nav-link-active"
+          (click)="closeMenu()"
+        >
+          <app-icon [name]="item.icon" [size]="17" />
+          <span class="flex-1">{{ item.label }}</span>
+          @if (item.path === '/tasks/list' && openCount() > 0) {
+            <span class="chip">{{ openCount() }}</span>
+          }
+          @if (item.path === '/trash' && trashCount() > 0) {
+            <span class="chip">{{ trashCount() }}</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="mt-5 rounded-xl border border-border bg-subtle/60 p-3">
+      <p class="label mb-1.5">Горячие клавиши</p>
+      <ul class="muted flex flex-col gap-1 text-xs">
+        <li><kbd>N</kbd> — новая задача</li>
+        <li><kbd>/</kbd> — поиск</li>
+        <li><kbd>T</kbd> — тема</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header
+      class="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-surface/90 px-4 py-3 backdrop-blur"
+    >
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm lg:hidden"
+        aria-label="Меню"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <app-icon name="menu" [size]="18" />
+      </button>
+      <h1 class="min-w-0 flex-1 truncate text-base font-bold text-ink">{{ pageTitle() }}</h1>
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm"
+        [attr.aria-label]="preferences.theme() === 'dark' ? 'Светлая тема' : 'Тёмная тема'"
+        (click)="preferences.toggleTheme()"
+      >
+        <app-icon [name]="preferences.theme() === 'dark' ? 'sun' : 'moon'" [size]="17" />
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" (click)="dialog.openCreate()">
+        <app-icon name="plus" [size]="15" />
+        <span class="hidden sm:inline">Новая задача</span>
+      </button>
+    </header>
+
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-5">
+      <router-outlet />
+    </main>
+
+    <footer class="border-t border-border px-4 py-4">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
+        <p class="muted text-xs">
+          Менеджер личных задач и заметок · вариант A (Angular 20 + Signals + CDK) · v1.0.0
+        </p>
+        <a class="muted flex items-center gap-1.5 text-xs hover:text-brand" [href]="'mailto:' + supportEmail">
+          <app-icon name="mail" [size]="14" />
+          {{ supportEmail }}
+        </a>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<app-task-dialog />
+<app-toast-host />

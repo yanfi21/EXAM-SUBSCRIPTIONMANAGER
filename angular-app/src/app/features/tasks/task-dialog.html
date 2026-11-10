@@ -1,0 +1,81 @@
+@if (dialog.isOpen()) {
+  <app-modal
+    [title]="editing() ? 'Редактирование задачи' : 'Новая задача'"
+    [description]="
+      editing() ? 'Измените поля и сохраните изменения' : 'Заполните поля и добавьте задачу'
+    "
+    (closed)="dialog.close()"
+  >
+    <form id="task-form" class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label class="label" for="task-title">Заголовок</label>
+        <input
+          id="task-title"
+          class="input"
+          formControlName="title"
+          placeholder="Например: подготовить отчёт"
+          [attr.aria-invalid]="invalid('title')"
+        />
+        @if (invalid('title')) {
+          <span class="text-xs text-danger">
+            @if (form.controls.title.hasError('required')) {
+              Укажите заголовок задачи
+            } @else {
+              Минимум 3 символа, максимум 160
+            }
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="label" for="task-description">Описание</label>
+        <textarea
+          id="task-description"
+          class="textarea"
+          formControlName="description"
+          placeholder="Детали, подзадачи, ссылки"
+        ></textarea>
+        @if (invalid('description')) {
+          <span class="text-xs text-danger">Максимум 2000 символов</span>
+        }
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="field">
+          <label class="label" for="task-priority">Приоритет</label>
+          <select id="task-priority" class="select" formControlName="priority">
+            @for (priority of priorities; track priority) {
+              <option [value]="priority">{{ priorityLabels[priority] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label" for="task-status">Статус</label>
+          <select id="task-status" class="select" formControlName="status">
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label" for="task-due">Дедлайн</label>
+          <input id="task-due" type="date" class="input" formControlName="dueDate" />
+        </div>
+
+        <div class="field">
+          <label class="label" for="task-tags">Теги</label>
+          <input id="task-tags" class="input" formControlName="tags" placeholder="работа, учёба" />
+        </div>
+      </div>
+    </form>
+
+    <ng-container modalFooter>
+      <button type="button" class="btn btn-soft" (click)="dialog.close()">Отмена</button>
+      <button type="submit" form="task-form" class="btn btn-primary">
+        {{ editing() ? 'Сохранить' : 'Создать задачу' }}
+      </button>
+    </ng-container>
+  </app-modal>
+}
